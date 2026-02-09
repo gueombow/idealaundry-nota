@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Nota IDEALAUNDRY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: monospace; max-width: 380px; margin: auto; padding: 10px; }
+    h2 { text-align: center; }
+    input, select, button { width: 100%; margin: 4px 0; padding: 6px; }
+    .row { display: flex; justify-content: space-between; }
+    .total { font-size: 18px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h2>IDEALAUNDRY</h2>
+
+<label>Nama Pelanggan</label>
+<input id="nama">
+
+<label>Layanan</label>
+<select id="layanan" onchange="hitung()">
+  <option value="6000">Cuci</option>
+  <option value="4000">Setrika</option>
+  <option value="9000">Cuci + Setrika</option>
+  <option value="12000">Kilat</option>
+</select>
+
+<label>Berat (Kg)</label>
+<input id="berat" type="number" value="1" onchange="hitung()">
+
+<div class="row total">
+  <span>Total</span>
+  <span id="total">Rp 0</span>
+</div>
+
+<button onclick="shareWA()">Share WhatsApp</button>
+<button onclick="window.print()">Print</button>
+
+<script>
+let nota = Date.now();
+
+function hitung() {
+  let harga = document.getElementById('layanan').value;
+  let berat = document.getElementById('berat').value;
+  let total = harga * berat;
+  document.getElementById('total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+}
+
+function shareWA() {
+  let nama = document.getElementById('nama').value;
+  let total = document.getElementById('total').innerText;
+  let text = `Nota ${nota}%0ANama: ${nama}%0ATotal: ${total}`;
+  window.open('https://wa.me/?text=' + text);
+}
+
+hitung();
+</script>
+
+</body>
+</html>
