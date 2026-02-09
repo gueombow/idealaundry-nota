@@ -1,61 +1,168 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Nota IDEALAUNDRY</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: monospace; max-width: 380px; margin: auto; padding: 10px; }
-    h2 { text-align: center; }
-    input, select, button { width: 100%; margin: 4px 0; padding: 6px; }
-    .row { display: flex; justify-content: space-between; }
-    .total { font-size: 18px; font-weight: bold; }
-  </style>
+<meta charset="UTF-8">
+<title>IDEALAUNDRY POS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+
+<style>
+body{
+  font-family: monospace;
+  max-width:380px;
+  margin:auto;
+  padding:10px;
+}
+h2{text-align:center;margin:4px 0}
+label{display:block;margin-top:6px}
+input,select,button{
+  width:100%;
+  padding:6px;
+  margin-top:3px;
+  font-family: monospace;
+}
+hr{border:1px dashed #000;margin:8px 0}
+.total{font-size:18px;font-weight:bold;text-align:right}
+.center{text-align:center;font-size:12px}
+@media print{button{display:none}}
+</style>
 </head>
+
 <body>
 
-<h2>IDEALAUNDRY</h2>
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;font-size:12px">
+  <div>No: <span id="noNota"></span></div>
+</div>
 
+<h2>IDEALAUNDRY</h2>
+<div class="center">
+  Perum Cijujung Permai<br>
+  Blok D No. 11<br>
+  Telp. 0852-79758282
+</div>
+
+<hr>
+
+<!-- INFO -->
+<div style="font-size:12px">
+  Masuk   : <span id="tglMasuk"></span><br>
+  Selesai : <input type="date" id="tglSelesai">
+</div>
+
+<hr>
+
+<!-- INPUT -->
 <label>Nama Pelanggan</label>
 <input id="nama">
 
-<label>Layanan</label>
-<select id="layanan" onchange="hitung()">
-  <option value="6000">Cuci</option>
-  <option value="4000">Setrika</option>
-  <option value="9000">Cuci + Setrika</option>
-  <option value="12000">Kilat</option>
+<label>Mode Layanan</label>
+<select id="mode" onchange="ubahMode()">
+  <option value="kiloan">Kiloan</option>
+  <option value="satuan">Satuan</option>
 </select>
 
-<label>Berat (Kg)</label>
-<input id="berat" type="number" value="1" onchange="hitung()">
+<label>Layanan</label>
+<select id="layanan" onchange="hitung()">
+  <option data-harga="6000">Cuci</option>
+  <option data-harga="4000">Setrika</option>
+  <option data-harga="9000">Cuci + Setrika</option>
+  <option data-harga="12000">Kilat</option>
+</select>
 
-<div class="row total">
-  <span>Total</span>
-  <span id="total">Rp 0</span>
+<div id="beratBox">
+  <label>Berat (Kg)</label>
+  <input id="berat" type="number" value="1" oninput="hitung()">
 </div>
 
-<button onclick="shareWA()">Share WhatsApp</button>
-<button onclick="window.print()">Print</button>
+<div id="qtyBox" style="display:none">
+  <label>Jumlah (pcs)</label>
+  <input id="qty" type="number" value="1" oninput="hitung()">
+</div>
+
+<hr>
+<div class="total">TOTAL: <span id="total"></span></div>
+<hr>
+
+<button onclick="shareWA()">📲 Share WhatsApp</button>
+<button onclick="window.print()">🖨 Print</button>
+
+<hr>
+<div class="center">Terima kasih telah memilih laundry kami</div>
 
 <script>
-let nota = Date.now();
+// ===== NO NOTA =====
+function genNota(){
+  let d=new Date();
+  return `IDL-${d.getFullYear()}${d.getMonth()+1}${d.getDate()}-${d.getTime().toString().slice(-4)}`;
+}
+document.getElementById("noNota").innerText=genNota();
 
-function hitung() {
-  let harga = document.getElementById('layanan').value;
-  let berat = document.getElementById('berat').value;
-  let total = harga * berat;
-  document.getElementById('total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+// ===== JAM REALTIME =====
+function updateJam(){
+  let n=new Date();
+  document.getElementById("tglMasuk").innerText=
+    n.toLocaleDateString("id-ID")+" "+n.toLocaleTimeString("id-ID");
+}
+setInterval(updateJam,1000);updateJam();
+
+// ===== TGL SELESAI (+2 HARI) =====
+let s=new Date();s.setDate(s.getDate()+2);
+document.getElementById("tglSelesai").value=s.toISOString().split("T")[0];
+
+// ===== MODE =====
+function ubahMode(){
+  let m=mode.value;
+  beratBox.style.display=m==="kiloan"?"block":"none";
+  qtyBox.style.display=m==="satuan"?"block":"none";
+  hitung();
 }
 
-function shareWA() {
-  let nama = document.getElementById('nama').value;
-  let total = document.getElementById('total').innerText;
-  let text = `Nota ${nota}%0ANama: ${nama}%0ATotal: ${total}`;
-  window.open('https://wa.me/?text=' + text);
+// ===== HITUNG =====
+function hitung(){
+  let harga=Number(layanan.selectedOptions[0].dataset.harga);
+  let total=0;
+  if(mode.value==="kiloan"){
+    total=harga*Number(berat.value||0);
+  }else{
+    total=harga*Number(qty.value||0);
+  }
+  totalSpan.innerText="Rp "+total.toLocaleString("id-ID");
+}
+const mode=document.getElementById("mode");
+const layanan=document.getElementById("layanan");
+const berat=document.getElementById("berat");
+const qty=document.getElementById("qty");
+const totalSpan=document.getElementById("total");
+ubahMode();
+
+// ===== WHATSAPP =====
+function shareWA(){
+  let text=
+`*IDEALAUNDRY*
+No: ${noNota.innerText}
+Nama: ${nama.value}
+Masuk: ${tglMasuk.innerText}
+Selesai: ${tglSelesai.value}
+Total: ${totalSpan.innerText}
+
+Terima kasih 🙏`;
+  window.open("https://wa.me/?text="+encodeURIComponent(text));
 }
 
-hitung();
+// ===== ESC/POS RAW (SIAP APK) =====
+function escposRaw(){
+return `
+\x1B\x40
+IDEALAUNDRY
+Perum Cijujung Permai
+Blok D No.11
+------------------------
+TOTAL ${totalSpan.innerText}
+------------------------
+Terima kasih
+\x1D\x56\x01`;
+}
 </script>
 
 </body>
